@@ -1,1 +1,2 @@
-etc_config.go
+config_gen.go
+config_gen_*.go

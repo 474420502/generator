@@ -13,32 +13,100 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func Parse2ConfigFile(filePath string, packageName string, yamlFile []byte) {
+type ConfigSetting struct {
+	StructName  string
+	FilePath    string
+	PackageName string
+	IsLog       bool
+	YamlData    []byte
+}
+
+func New() *ConfigSetting {
+	cs := &ConfigSetting{
+		StructName:  "Config",
+		FilePath:    "./config_gen.go",
+		PackageName: "config",
+		IsLog:       true,
+	}
+	return cs
+}
+
+func (cs *ConfigSetting) WithStructName(StructName string) *ConfigSetting {
+	cs.StructName = StructName
+	return cs
+}
+
+func (cs *ConfigSetting) WithFilePath(FilePath string) *ConfigSetting {
+	cs.FilePath = FilePath
+	return cs
+}
+
+func (cs *ConfigSetting) WithPackageName(PackageName string) *ConfigSetting {
+	cs.PackageName = PackageName
+	return cs
+}
+
+func (cs *ConfigSetting) WithYamlPath(YamlFile string) *ConfigSetting {
+	ydata, err := os.ReadFile(YamlFile)
+	if err != nil {
+		panic(err)
+	}
+	cs.YamlData = ydata
+	return cs
+}
+
+func (cs *ConfigSetting) WithYamlBytes(YamlBytes []byte) *ConfigSetting {
+	cs.YamlData = YamlBytes
+	return cs
+}
+
+func (cs *ConfigSetting) WithYamlString(YamlStr string) *ConfigSetting {
+	cs.YamlData = []byte(YamlStr)
+	return cs
+}
+
+func (cs *ConfigSetting) WithIsLog(IsLog bool) *ConfigSetting {
+	cs.IsLog = IsLog
+	return cs
+}
+
+func (cs *ConfigSetting) Create() {
+	if len(cs.YamlData) == 0 {
+		panic("WithYamlPath | WithYamlBytes | WithYamlString must be called at least once")
+	}
+
+	cs.yamlBytesParse()
+}
+
+func (cs *ConfigSetting) yamlBytesParse() {
 	// 读取YAML文件内容
 
 	// 解析YAML内容
 	var data interface{}
-	err := yaml.Unmarshal(yamlFile, &data)
+	err := yaml.Unmarshal(cs.YamlData, &data)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal YAML: %v", err)
 	}
 
 	// 创建输出文件
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(cs.FilePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Failed to create output file: %v", err)
 	}
 	defer file.Close()
 
 	// // 写入包名和结构体定义
-	file.WriteString(fmt.Sprintf("package %s\n\n", packageName))
+	file.WriteString(fmt.Sprintf("package %s\n\n", cs.PackageName))
 
 	var buf bytes.Buffer
-	buf.WriteString("type Config ")
+	buf.WriteString(fmt.Sprintf("type %s ", cs.StructName))
 	// 递归处理YAML数据
 	processYAML(&buf, data, "", false)
 	file.WriteString(buf.String())
+
+	log.Printf("package %s -> %s created!:\n %s", cs.PackageName, cs.FilePath, buf.String())
 }
+
 func processYAML(buf io.Writer, data interface{}, indent string, isArray bool) {
 
 	if isArray {
