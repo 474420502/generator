@@ -2,17 +2,12 @@ package sql_generator_test
 
 import (
 	"testing"
+
+	sql_generator "github.com/474420502/generator/sql"
+	// _ "github.com/go-sql-driver/mysql" // MySQL driver
 )
 
-var genDir string = "model/"
-
 func TestCase1(t *testing.T) {
-	// db, err := sql.Open("mysql", "")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer db.Close()
-
-	// sql_generator.GenModel(genDir+"/types_gen.go", db)
-
+	genModel := sql_generator.NewGenModel().WithOpenSqlDriver("mysql", "")
+	genModel.GenWithLogics()
 }

@@ -19,7 +19,8 @@ func init() {
 	currentDir := filepath.Dir(currentFile)
 
 	// 解析模板文件
-	defaultTemplate, err = template.ParseGlob(filepath.Join(currentDir, "/*.tpl"))
+	globpath := filepath.Join(currentDir, "/*.tpl")
+	defaultTemplate, err = template.ParseGlob(globpath)
 	if err != nil {
 		panic(err)
 	}

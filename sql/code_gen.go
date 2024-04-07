@@ -14,6 +14,7 @@ type GenModel struct {
 	TableStructFileName string
 	PackageName         string
 	LogicDir            *string
+	LogicPackageName    *string
 	db                  *sql.DB
 }
 
@@ -42,6 +43,11 @@ func (gen *GenModel) WithPackageName(PackageName string) *GenModel {
 
 func (gen *GenModel) WithLoigcDir(LoigcDir string) *GenModel {
 	gen.LogicDir = &LoigcDir
+	return gen
+}
+
+func (gen *GenModel) WithLoigcPackName(LoigcPackName string) *GenModel {
+	gen.LogicPackageName = &LoigcPackName
 	return gen
 }
 
@@ -90,42 +96,30 @@ func (gen *GenModel) GenWithLogics() {
 		cols, tname, tcomment := GetColsFromTable(testName, gen.db)
 		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment))
 	}
-	genFilePath := strings.TrimRight(gen.GenFileDir, "/") + "/" + gen.TableStructFileName
-	tpl.ExecuteTemplateWithCreateGoFile(genFilePath, "db_types.tpl", map[string]any{
-		"AllTables":   tableTypes,
-		"PackageName": gen.PackageName,
-	})
-}
-
-func (gen *GenModel) GenModelWithLogics() {
-	if gen.db == nil {
-		panic("WithSqlDb | WithOpenSqlDriver must be called at least once")
-	}
-
-	var tableTypes []*TableType
-
-	tablenames := GetAllTableNames(gen.db)
-	for _, testName := range tablenames {
-		cols, tname, tcomment := GetColsFromTable(testName, gen.db)
-		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment))
-	}
 
 	genFilePath := strings.TrimRight(gen.GenFileDir, "/") + "/" + gen.TableStructFileName
 	tpl.ExecuteTemplateWithCreateGoFile(genFilePath, "db_types.tpl", map[string]any{
 		"AllTables":   tableTypes,
 		"PackageName": gen.PackageName,
 	})
-	var logicDir string
+	var logicDir, logicPackageName string
 	if gen.LogicDir != nil {
 		logicDir = *gen.LogicDir
 	} else {
 		logicDir = gen.GenFileDir
 	}
 
-	for _, tableName := range tablenames {
-		err := createFileWithTplIfNotExists(fmt.Sprintf("%s/%s_logic.go", logicDir, tableName), func(f io.Writer) error {
+	if gen.LogicPackageName != nil {
+		logicPackageName = *gen.LogicPackageName
+	} else {
+		logicPackageName = gen.PackageName
+	}
+
+	for _, tt := range tableTypes {
+		err := createFileWithTplIfNotExists(fmt.Sprintf("%s/%s_logic.go", logicDir, tt.TableName), func(f io.Writer) error {
 			return tpl.ExecuteTemplate(f, "db_logic.tpl", map[string]any{
-				"TableName": tableName,
+				"TableNameCamel": tt.TableNameCamel,
+				"PackageName":    logicPackageName,
 			})
 		})
 
@@ -133,7 +127,6 @@ func (gen *GenModel) GenModelWithLogics() {
 			panic(err)
 		}
 	}
-
 }
 
 var typeForMysqlWithNotNull = map[string]string{

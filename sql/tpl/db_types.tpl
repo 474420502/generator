@@ -1,4 +1,4 @@
-package {{.}}
+package {{.PackageName}}
 
 import (
 	"time"
