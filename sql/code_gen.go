@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 
 	"github.com/474420502/generator/sql/tpl"
@@ -27,7 +28,11 @@ func NewGenModel() *GenModel {
 }
 
 func (gen *GenModel) WithGenFileDir(GenFileDir string) *GenModel {
-	gen.GenFileDir = strings.TrimRight(GenFileDir, "/")
+	absPath, err := filepath.Abs(GenFileDir)
+	if err != nil {
+		panic(err)
+	}
+	gen.GenFileDir = absPath
 	return gen
 }
 
@@ -42,7 +47,11 @@ func (gen *GenModel) WithPackageName(PackageName string) *GenModel {
 }
 
 func (gen *GenModel) WithLoigcDir(LoigcDir string) *GenModel {
-	gen.LogicDir = &LoigcDir
+	absPath, err := filepath.Abs(LoigcDir)
+	if err != nil {
+		panic(err)
+	}
+	gen.LogicDir = &absPath
 	return gen
 }
 
