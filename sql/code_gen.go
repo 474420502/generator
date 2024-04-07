@@ -3,44 +3,137 @@ package sql_generator
 import (
 	"database/sql"
 	"fmt"
-	"go/format"
-	"os"
+	"io"
+	"strings"
 
 	"github.com/474420502/generator/sql/tpl"
 )
 
-// genDir+"/types_gen.go"
-func GenModel(genFilePath string, db *sql.DB) {
+type GenModel struct {
+	GenFileDir          string
+	TableStructFileName string
+	PackageName         string
+	LogicDir            *string
+	db                  *sql.DB
+}
+
+func NewGenModel() *GenModel {
+	return &GenModel{
+		GenFileDir:          "model",
+		TableStructFileName: "types_gen.go",
+		PackageName:         "model",
+	}
+}
+
+func (gen *GenModel) WithGenFileDir(GenFileDir string) *GenModel {
+	gen.GenFileDir = strings.TrimRight(GenFileDir, "/")
+	return gen
+}
+
+func (gen *GenModel) WithTableStructFileName(TableStructFileName string) *GenModel {
+	gen.TableStructFileName = TableStructFileName
+	return gen
+}
+
+func (gen *GenModel) WithPackageName(PackageName string) *GenModel {
+	gen.PackageName = PackageName
+	return gen
+}
+
+func (gen *GenModel) WithLoigcDir(LoigcDir string) *GenModel {
+	gen.LogicDir = &LoigcDir
+	return gen
+}
+
+func (gen *GenModel) WithOpenSqlDriver(driverName string, dataSourceName string) *GenModel {
+	db, err := sql.Open(driverName, dataSourceName)
+	if err != nil {
+		panic(err)
+	}
+	gen.db = db
+	return gen
+}
+
+func (gen *GenModel) WithSqlDb(db *sql.DB) *GenModel {
+	gen.db = db
+	return gen
+}
+
+func (gen *GenModel) Gen() {
+	if gen.db == nil {
+		panic("WithSqlDb | WithOpenSqlDriver must be called at least once")
+	}
+
 	var tableTypes []*TableType
 
-	tablenames := GetAllTableNames(db)
+	tablenames := GetAllTableNames(gen.db)
 	for _, testName := range tablenames {
-		cols, tname, tcomment := GetColsFromTable(testName, db)
+		cols, tname, tcomment := GetColsFromTable(testName, gen.db)
+		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment))
+	}
+	genFilePath := strings.TrimRight(gen.GenFileDir, "/") + "/" + gen.TableStructFileName
+	tpl.ExecuteTemplateWithCreateGoFile(genFilePath, "db_types.tpl", map[string]any{
+		"AllTables":   tableTypes,
+		"PackageName": gen.PackageName,
+	})
+}
+
+func (gen *GenModel) GenWithLogics() {
+	if gen.db == nil {
+		panic("WithSqlDb | WithOpenSqlDriver must be called at least once")
+	}
+
+	var tableTypes []*TableType
+
+	tablenames := GetAllTableNames(gen.db)
+	for _, testName := range tablenames {
+		cols, tname, tcomment := GetColsFromTable(testName, gen.db)
+		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment))
+	}
+	genFilePath := strings.TrimRight(gen.GenFileDir, "/") + "/" + gen.TableStructFileName
+	tpl.ExecuteTemplateWithCreateGoFile(genFilePath, "db_types.tpl", map[string]any{
+		"AllTables":   tableTypes,
+		"PackageName": gen.PackageName,
+	})
+}
+
+func (gen *GenModel) GenModelWithLogics() {
+	if gen.db == nil {
+		panic("WithSqlDb | WithOpenSqlDriver must be called at least once")
+	}
+
+	var tableTypes []*TableType
+
+	tablenames := GetAllTableNames(gen.db)
+	for _, testName := range tablenames {
+		cols, tname, tcomment := GetColsFromTable(testName, gen.db)
 		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment))
 	}
 
-	err := createDirIfNotExists(genFilePath)
-	if err != nil {
-		panic(err)
-	}
-
-	typesGenFile, err := os.OpenFile(genFilePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
-	// log.Println(typesGenFile)
-
-	typesGenData, err := tpl.ExecuteTemplateBytes("db_types.tpl", map[string]any{
-		"AllTables": tableTypes,
+	genFilePath := strings.TrimRight(gen.GenFileDir, "/") + "/" + gen.TableStructFileName
+	tpl.ExecuteTemplateWithCreateGoFile(genFilePath, "db_types.tpl", map[string]any{
+		"AllTables":   tableTypes,
+		"PackageName": gen.PackageName,
 	})
-	if err != nil {
-		panic(err)
+	var logicDir string
+	if gen.LogicDir != nil {
+		logicDir = *gen.LogicDir
+	} else {
+		logicDir = gen.GenFileDir
 	}
-	typesGenData, err = format.Source(typesGenData)
-	if err != nil {
-		panic(err)
+
+	for _, tableName := range tablenames {
+		err := createFileWithTplIfNotExists(fmt.Sprintf("%s/%s_logic.go", logicDir, tableName), func(f io.Writer) error {
+			return tpl.ExecuteTemplate(f, "db_logic.tpl", map[string]any{
+				"TableName": tableName,
+			})
+		})
+
+		if err != nil {
+			panic(err)
+		}
 	}
-	typesGenFile.Write(typesGenData)
+
 }
 
 var typeForMysqlWithNotNull = map[string]string{

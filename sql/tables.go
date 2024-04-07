@@ -21,25 +21,25 @@ type TableTypeField struct {
 	FieldComment   string
 }
 
-type TableNameComment struct {
-	Name    string
-	GoName  string
-	Comment string
-}
+// type TableNameComment struct {
+// 	Name    string
+// 	GoName  string
+// 	Comment string
+// }
 
-type TMCS []TableNameComment
+// type tableNameComments []TableNameComment
 
-func (u TMCS) Len() int {
-	return len(u)
-}
+// func (u tableNameComments) Len() int {
+// 	return len(u)
+// }
 
-func (u TMCS) Less(i, j int) bool {
-	return u[i].Name < u[j].Name
-}
+// func (u tableNameComments) Less(i, j int) bool {
+// 	return u[i].Name < u[j].Name
+// }
 
-func (u TMCS) Swap(i, j int) {
-	u[i], u[j] = u[j], u[i]
-}
+// func (u tableNameComments) Swap(i, j int) {
+// 	u[i], u[j] = u[j], u[i]
+// }
 
 func GetAllTableNames(db *sql.DB) []string {
 
