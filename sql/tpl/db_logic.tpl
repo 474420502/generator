@@ -7,4 +7,5 @@ import (
 type {{.TableNameCamel}}Model struct {
     // fields ...
     db *sqlx.DB
+    TableName string // 表名
 }

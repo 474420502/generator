@@ -27,6 +27,6 @@ type {{.TableNameCamel}} struct {
 func (models *LogicModels) SetSqlxDriver(driverName string, dataSourceName string) { 
 	db := sqlx.MustOpen(driverName, dataSourceName)
 {{- range .AllTables}}
-	models.{{.TableNameCamel}}Model = &{{.TableNameCamel}}Model{db: db}
+	models.{{.TableNameCamel}}Model = &{{.TableNameCamel}}Model{db: db, TableName: "{{.TableName}}"}
 {{- end}} 
 }
