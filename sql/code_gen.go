@@ -107,7 +107,7 @@ func (gen *GenModel) GenWithLogics() {
 	}
 
 	genFilePath := strings.TrimRight(gen.GenFileDir, "/") + "/" + gen.TableStructFileName
-	tpl.ExecuteTemplateWithCreateGoFile(genFilePath, "db_types.tpl", map[string]any{
+	tpl.ExecuteTemplateWithCreateGoFile(genFilePath, "db_types_with_logic.tpl", map[string]any{
 		"AllTables":   tableTypes,
 		"PackageName": gen.PackageName,
 	})

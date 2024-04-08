@@ -9,8 +9,8 @@ import (
 
 func TestCase1(t *testing.T) {
 
-	// genModel := NewGenModel().WithOpenSqlDriver("mysql", "")
-	// genModel.GenWithLogics()
+	genModel := NewGenModel().WithOpenSqlDriver("mysql", "")
+	genModel.GenWithLogics()
 
 	log.Println()
 }

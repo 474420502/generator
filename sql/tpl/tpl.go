@@ -56,6 +56,7 @@ func ExecuteTemplateWithCreateGoFile(genGoFilePath string, templateName string, 
 	if err != nil {
 		panic(err)
 	}
+	// log.Println(string(typesGenData))
 	typesGenData, err = format.Source(typesGenData)
 	if err != nil {
 		panic(err)
