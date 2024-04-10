@@ -30,7 +30,7 @@ func NewGenModel() *GenModel {
 	}
 }
 
-// WithTagHandler default: fmt.Sprintf("`db:\"%s\" gorm:\"%s\" json:\"%s\"` form:\"%s\"`", col.Name, col.Name, col.Name, col.Name)
+// WithTagHandler default: fmt.Sprintf("`db:\"%s\" gorm:\"%s\" json:\"%s\" form:\"%s\"`", col.Name, col.Name, col.Name, col.Name)
 func (gen *GenModel) WithTagHandler(tagHandlerFunc func(tableName string, col *Column) string) *GenModel {
 	gen.tagHandlerFunc = tagHandlerFunc
 	return gen
@@ -252,7 +252,7 @@ func getTableType(cols []*Column, tableName string, tableComment string, tagHand
 }
 
 func getTagString(tableName string, col *Column) string {
-	return fmt.Sprintf("`db:\"%s\" gorm:\"%s\" json:\"%s\"` form:\"%s\"`", col.Name, col.Name, col.Name, col.Name)
+	return fmt.Sprintf("`db:\"%s\" gorm:\"%s\" json:\"%s\" form:\"%s\"`", col.Name, col.Name, col.Name, col.Name)
 }
 
 func getSqlToGoStruct(col *Column) string {

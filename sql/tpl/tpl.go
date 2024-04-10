@@ -6,7 +6,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -57,11 +60,13 @@ func ExecuteTemplateWithCreateGoFile(genGoFilePath string, templateName string, 
 		panic(err)
 	}
 	// log.Println(string(typesGenData))
-	typesGenData, err = format.Source(typesGenData)
+	typesGenDataFormat, err := format.Source(typesGenData)
 	if err != nil {
-		panic(err)
+		// regexp.MustCompile(``)
+		lerr := locateError(string(typesGenData), err.Error())
+		panic(err.Error() + "\n" + lerr)
 	}
-	typesGenFile.Write(typesGenData)
+	typesGenFile.Write(typesGenDataFormat)
 }
 
 func createDirIfNotExists(genFilePath string) error {
@@ -77,4 +82,34 @@ func createDirIfNotExists(genFilePath string) error {
 	}
 
 	return nil
+}
+
+func locateError(source, errMsg string) (errline string) {
+	// 匹配错误行号和列号
+	re := regexp.MustCompile(`(\d+)[:](\d+)[:]`)
+	matches := re.FindStringSubmatch(errMsg)
+	if len(matches) < 3 {
+		return ""
+	}
+
+	line, _ := strconv.Atoi(matches[1])
+	// col, _ := strconv.Atoi(matches[2])
+
+	// 将源代码分割成行
+	lines := strings.Split(source, "\n")
+	if line > len(lines) {
+		return ""
+	}
+
+	// 计算错误位置的偏移
+	// offset := 0
+	// for i := 0; i < line-1; i++ {
+	// 	offset += len(lines[i]) + 1 // +1 for newline
+	// }
+	// offset += col
+
+	// // 返回错误位置的开始和结束偏移
+	// start := offset - 1
+	// end := start + 1
+	return lines[line]
 }
