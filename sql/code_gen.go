@@ -252,7 +252,21 @@ func getTableType(cols []*Column, tableName string, tableComment string, tagHand
 }
 
 func getTagString(tableName string, col *Column) string {
-	return fmt.Sprintf("`db:\"%s\" gorm:\"%s\" json:\"%s\" form:\"%s\"`", col.Name, col.Name, col.Name, col.Name)
+	gormtagstr := fmt.Sprintf("column:%s;", col.Name)
+
+	if col.IndexType != "" {
+		gormtagstr += col.IndexType + ";"
+	}
+
+	if col.AutoIncrement {
+		gormtagstr += "auto_increment:true;"
+	}
+
+	if col.DefaultValue != nil {
+		gormtagstr += fmt.Sprintf("default:%s;", *col.DefaultValue)
+	}
+
+	return fmt.Sprintf("`db:\"%s\" gorm:\"%s\" json:\"%s\" form:\"%s\"`", col.Name, gormtagstr, col.Name, col.Name)
 }
 
 func getSqlToGoStruct(col *Column) string {
