@@ -3,7 +3,7 @@ package {{.PackageName}}
 import (
 	"time"
 
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 var Models *LogicModels = &LogicModels{}
@@ -28,8 +28,7 @@ func (tstru *{{.TableNameCamel}}) TableName() string {
 {{end}}
 
 
-func (models *LogicModels) SetSqlxDriver(driverName string, dataSourceName string) { 
-	db := sqlx.MustOpen(driverName, dataSourceName)
+func (models *LogicModels) SetGormDriver(db *gorm.DB) { 
 {{- range .AllTables}}
 	models.{{.TableNameCamel}}Model = &{{.TableNameCamel}}Model{db: db, TableName: "{{.TableName}}"}
 {{- end}} 

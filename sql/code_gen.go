@@ -258,9 +258,9 @@ func getTagString(tableName string, col *Column) string {
 func getSqlToGoStruct(col *Column) string {
 
 	if v, ok := typeForMysqlWithNotNull[col.GetType()]; ok {
-		if col.NotNull {
-			return v
-		}
+		// if col.NotNull {
+		// 	return v
+		// }
 		return "*" + v
 	}
 

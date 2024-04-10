@@ -1,11 +1,11 @@
 package {{.PackageName}}
 
 import (
-    "github.com/jmoiron/sqlx"
+    "gorm.io/gorm"
 )
 
 type {{.TableNameCamel}}Model struct {
     // fields ...
-    db *sqlx.DB
+    db *gorm.DB
     TableName string // 表名
 }
