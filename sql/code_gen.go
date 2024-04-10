@@ -16,7 +16,10 @@ type GenModel struct {
 	PackageName         string
 	LogicDir            *string
 	LogicPackageName    *string
-	db                  *sql.DB
+
+	tagHandlerFunc func(tableName string, col *Column) string
+
+	db *sql.DB
 }
 
 func NewGenModel() *GenModel {
@@ -25,6 +28,12 @@ func NewGenModel() *GenModel {
 		TableStructFileName: "types_gen.go",
 		PackageName:         "model",
 	}
+}
+
+// WithTagHandler default: fmt.Sprintf("`db:\"%s\" gorm:\"%s\" json:\"%s\"` form:\"%s\"`", col.Name, col.Name, col.Name, col.Name)
+func (gen *GenModel) WithTagHandler(tagHandlerFunc func(tableName string, col *Column) string) *GenModel {
+	gen.tagHandlerFunc = tagHandlerFunc
+	return gen
 }
 
 func (gen *GenModel) WithGenFileDir(GenFileDir string) *GenModel {
@@ -84,7 +93,7 @@ func (gen *GenModel) Gen() {
 	tablenames := GetAllTableNames(gen.db)
 	for _, testName := range tablenames {
 		cols, tname, tcomment := GetColsFromTable(testName, gen.db)
-		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment))
+		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment, gen.tagHandlerFunc))
 	}
 	genFilePath := strings.TrimRight(gen.GenFileDir, "/") + "/" + gen.TableStructFileName
 	tpl.ExecuteTemplateWithCreateGoFile(genFilePath, "db_types.tpl", map[string]any{
@@ -103,7 +112,7 @@ func (gen *GenModel) GenWithLogics() {
 	tablenames := GetAllTableNames(gen.db)
 	for _, testName := range tablenames {
 		cols, tname, tcomment := GetColsFromTable(testName, gen.db)
-		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment))
+		tableTypes = append(tableTypes, getTableType(cols, tname, tcomment, gen.tagHandlerFunc))
 	}
 
 	genFilePath := strings.TrimRight(gen.GenFileDir, "/") + "/" + gen.TableStructFileName
@@ -193,7 +202,7 @@ var typeForMysqlWithNotNull = map[string]string{
 	"decimal unsigned": "float64",
 }
 
-func getTableType(cols []*Column, tableName string, tableComment string) *TableType {
+func getTableType(cols []*Column, tableName string, tableComment string, tagHandlerFunc func(tableName string, col *Column) string) *TableType {
 	tableNameCamel := toPascalCase(tableName)
 
 	var tfields []TableTypeField
@@ -209,7 +218,10 @@ func getTableType(cols []*Column, tableName string, tableComment string) *TableT
 		fieldName := toPascalCase(col.Name)
 		typeName := getSqlToGoStruct(col)
 
-		tagstr := getTagString(col)
+		if tagHandlerFunc == nil {
+			tagHandlerFunc = getTagString
+		}
+		tagstr := tagHandlerFunc(tableName, col)
 
 		ttypeField.FieldName = col.Name
 		ttypeField.FieldNameCamel = fieldName
@@ -239,8 +251,8 @@ func getTableType(cols []*Column, tableName string, tableComment string) *TableT
 	return tt
 }
 
-func getTagString(col *Column) string {
-	return fmt.Sprintf("`db:\"%s\"`", col.Name)
+func getTagString(tableName string, col *Column) string {
+	return fmt.Sprintf("`db:\"%s\" gorm:\"%s\" json:\"%s\"` form:\"%s\"`", col.Name, col.Name, col.Name, col.Name)
 }
 
 func getSqlToGoStruct(col *Column) string {

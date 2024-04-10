@@ -21,6 +21,10 @@ type {{.TableNameCamel}} struct {
 	{{.FieldNameCamel}} {{.FieldType}} {{.FieldTag}} // {{.FieldComment}}
 {{- end}}
 }
+
+func (tstru *{{.TableNameCamel}}) TableName() string {
+	return "{{.TableName}}"
+}
 {{end}}
 
 
