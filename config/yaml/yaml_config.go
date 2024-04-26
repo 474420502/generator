@@ -36,7 +36,7 @@ func (cs *ConfigSetting) WithStructName(StructName string) *ConfigSetting {
 	return cs
 }
 
-func (cs *ConfigSetting) WithFilePath(FilePath string) *ConfigSetting {
+func (cs *ConfigSetting) WithGenFilePath(FilePath string) *ConfigSetting {
 	cs.FilePath = FilePath
 	return cs
 }
