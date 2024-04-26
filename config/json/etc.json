@@ -1,0 +1,31 @@
+{
+  "database": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "charset": "UTF8MB4",
+    "username": "user",
+    "password": "123cassxxx",
+    "database": "testdatabase"
+  },
+  "mydatabase": [ {
+    "servers": [
+      "192.168.1.2:3333",
+      51.5,
+      "192.168.1.100:3333"
+    ]
+  }, {
+    "redis": {
+      "host": "127.0.0.1",
+      "port": 6379
+    }
+  }],
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379
+  },
+  "servers": [
+    "192.168.1.2:3333",
+    "192.168.1.5:3333",
+    "192.168.1.100:3333"
+  ]
+}
